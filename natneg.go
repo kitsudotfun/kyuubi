@@ -22,10 +22,6 @@ var (
 )
 
 func NatNegToken(_ NatNegTokenRequest, s Session) (NatNegTokenResponse, error) {
-	if s.GameAddr.IsValid() {
-		return NatNegTokenResponse{}, ErrGameAddrSet
-	}
-
 	key, err := GetJwtKey("natneg")
 	if err != nil {
 		return NatNegTokenResponse{}, err
