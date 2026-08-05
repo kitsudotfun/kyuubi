@@ -163,7 +163,7 @@ func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
 		return ServerJoinResponse{}, ErrBadPassword
 	}
 
-	err = PutEncodedKV(s.GameID+"|"+req.ID+"|"+s.ID.String(), ReservationNamespace, Reservation{
+	err = PutEncodedKV(server.Key()+"|"+s.ID.String(), ReservationNamespace, Reservation{
 		ID:   s.ID,
 		Addr: s.GameAddr,
 	}, &kv.PutOptions{ExpirationTTL: 60})
