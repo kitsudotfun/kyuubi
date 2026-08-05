@@ -10,6 +10,7 @@ import (
 	"math/bits"
 	"net/http"
 	"net/netip"
+	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -104,7 +105,7 @@ type SessionVerifyResponse struct {
 
 func SessionVerify(r *http.Request, req SessionVerifyRequest, _ Session) (SessionVerifyResponse, error) {
 	var claims SessionClaims
-	token, err := jwt.ParseWithClaims(r.Header.Get("Authorization"), &claims, func(t *jwt.Token) (any, error) { return GetJwtKey("proof") })
+	token, err := jwt.ParseWithClaims(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), &claims, func(t *jwt.Token) (any, error) { return GetJwtKey("proof") })
 	if err != nil {
 		return SessionVerifyResponse{}, err
 	}

@@ -4,6 +4,7 @@ import (
 	"encoding/gob"
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/syumai/workers"
@@ -61,7 +62,7 @@ func handAuth[reqT any, resT any](handler func(*http.Request, reqT, Session) (re
 		}
 
 		var claims SessionClaims
-		token, err := jwt.ParseWithClaims(r.Header.Get("Authorization"), &claims, func(t *jwt.Token) (any, error) { return GetJwtKey("session") })
+		token, err := jwt.ParseWithClaims(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), &claims, func(t *jwt.Token) (any, error) { return GetJwtKey("session") })
 		if err != nil {
 			http.Error(w, "", http.StatusBadRequest)
 			return
