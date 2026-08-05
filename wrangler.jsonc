@@ -16,6 +16,12 @@
 	"upload_source_maps": true,
 	"compatibility_flags": [
 		"nodejs_compat"
+	],
+	"kv_namespaces": [
+		{
+			"binding": "KITSU_SESSIONS",
+			"id": "2b8e8d989cfc4041bc667b548b437fe5"
+		}
 	]
 	/**
 	 * Smart Placement

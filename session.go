@@ -24,7 +24,7 @@ const (
 	ProofDifficulty = 24 // bits
 	ProofSaltLen    = 16
 
-	SessionNamespace = "sessions"
+	SessionNamespace = "KITSU_SESSIONS"
 )
 
 var (
