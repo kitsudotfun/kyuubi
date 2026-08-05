@@ -30,7 +30,7 @@ func main() {
 	workers.Serve(nil)
 }
 
-func handJson[reqT any, resT any](session Session, handler func(*http.Request, reqT, Session) (resT, error)) http.HandlerFunc {
+func handJson[reqT any, resT any](session Session, handler func(reqT, Session) (resT, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req reqT
 		err := json.NewDecoder(r.Body).Decode(&req)
@@ -39,7 +39,7 @@ func handJson[reqT any, resT any](session Session, handler func(*http.Request, r
 			return
 		}
 
-		res, err := handler(r, req, session)
+		res, err := handler(req, session)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
@@ -54,7 +54,7 @@ func handJson[reqT any, resT any](session Session, handler func(*http.Request, r
 	}
 }
 
-func handAuth[reqT any, resT any](handler func(*http.Request, reqT, Session) (resT, error)) http.HandlerFunc {
+func handAuth[reqT any, resT any](handler func(reqT, Session) (resT, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") == "" {
 			http.Error(w, "", http.StatusUnauthorized)

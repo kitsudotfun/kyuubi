@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/gob"
 	"errors"
-	"net/http"
 	"net/netip"
 
 	"github.com/syumai/workers/cloudflare/kv"
@@ -65,7 +64,7 @@ type ServerHeartbeatRequest struct {
 }
 type ServerHeartbeatResponse struct{}
 
-func ServerHeartbeat(_ *http.Request, req ServerHeartbeatRequest, s Session) (ServerHeartbeatResponse, error) {
+func ServerHeartbeat(req ServerHeartbeatRequest, s Session) (ServerHeartbeatResponse, error) {
 	if !s.GameAddr.IsValid() {
 		return ServerHeartbeatResponse{}, ErrUnknownGameAddr
 	}
@@ -96,7 +95,7 @@ func ServerHeartbeat(_ *http.Request, req ServerHeartbeatRequest, s Session) (Se
 type ServerDeleteRequest struct{}
 type ServerDeleteResponse struct{}
 
-func ServerDelete(_ *http.Request, req ServerDeleteRequest, s Session) (ServerDeleteResponse, error) {
+func ServerDelete(req ServerDeleteRequest, s Session) (ServerDeleteResponse, error) {
 	if !s.GameAddr.IsValid() {
 		return ServerDeleteResponse{}, ErrUnknownGameAddr
 	}
@@ -122,7 +121,7 @@ type ServerListResponse struct {
 	Servers []Server `json:"servers"`
 }
 
-func ServerList(_ *http.Request, req ServerListRequest, s Session) (ServerListResponse, error) {
+func ServerList(req ServerListRequest, s Session) (ServerListResponse, error) {
 	if !s.GameAddr.IsValid() {
 		return ServerListResponse{}, ErrUnknownGameAddr
 	}
@@ -186,7 +185,7 @@ type Reservation struct {
 	Addr netip.AddrPort `json:"addr"`
 }
 
-func ServerJoin(_ *http.Request, req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
+func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
 	if !s.GameAddr.IsValid() {
 		return ServerJoinResponse{}, ErrUnknownGameAddr
 	}
@@ -227,7 +226,7 @@ type ServerResvListResponse struct {
 	Reservations []Reservation `json:"reservations"`
 }
 
-func ServerResvList(_ *http.Request, _ ServerResvListRequest, s Session) (ServerResvListResponse, error) {
+func ServerResvList(_ ServerResvListRequest, s Session) (ServerResvListResponse, error) {
 	if !s.GameAddr.IsValid() {
 		return ServerResvListResponse{}, ErrUnknownGameAddr
 	}

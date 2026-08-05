@@ -8,9 +8,7 @@ import (
 	"encoding/binary"
 	"encoding/gob"
 	"math/bits"
-	"net/http"
 	"net/netip"
-	"strings"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -58,7 +56,7 @@ type SessionNewResponse struct {
 	Salt       [ProofSaltLen]byte `json:"salt"`
 }
 
-func SessionNew(_ *http.Request, req SessionNewRequest, _ Session) (SessionNewResponse, error) {
+func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
 	game, err := GetGame(req.GameID)
 	if err != nil {
 		return SessionNewResponse{}, err
@@ -97,15 +95,16 @@ func SessionNew(_ *http.Request, req SessionNewRequest, _ Session) (SessionNewRe
 }
 
 type SessionVerifyRequest struct {
+	Token string `json:"token"` // proof token instead of session so it goes here instead
 	Proof []byte `json:"proof"`
 }
 type SessionVerifyResponse struct {
 	Token string `json:"token"`
 }
 
-func SessionVerify(r *http.Request, req SessionVerifyRequest, _ Session) (SessionVerifyResponse, error) {
+func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, error) {
 	var claims SessionClaims
-	token, err := jwt.ParseWithClaims(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), &claims, func(t *jwt.Token) (any, error) { return GetJwtKey("proof") })
+	token, err := jwt.ParseWithClaims(req.Token, &claims, func(t *jwt.Token) (any, error) { return GetJwtKey("proof") })
 	if err != nil {
 		return SessionVerifyResponse{}, err
 	}

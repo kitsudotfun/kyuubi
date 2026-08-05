@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"net/http"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -22,7 +21,7 @@ var (
 	ErrGameAddrSet = errors.New("game address already set")
 )
 
-func NatNegToken(_ *http.Request, _ NatNegTokenRequest, s Session) (NatNegTokenResponse, error) {
+func NatNegToken(_ NatNegTokenRequest, s Session) (NatNegTokenResponse, error) {
 	if s.GameAddr.IsValid() {
 		return NatNegTokenResponse{}, ErrGameAddrSet
 	}
