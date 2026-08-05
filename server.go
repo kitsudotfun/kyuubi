@@ -21,9 +21,11 @@ type Server struct {
 	GameID string         `json:"-"`
 	Addr   netip.AddrPort `json:"-"`
 
-	Name     string `json:"name"`
-	Public   bool   `json:"public"`
-	Password string `json:"password"`
+	Name   string `json:"name"`
+	Public bool   `json:"public"`
+
+	HasPassword bool   `json:"has_password"`
+	Password    string `json:"password"`
 
 	Players    int `json:"players"`
 	MaxPlayers int `json:"max_players"`
@@ -160,7 +162,10 @@ func ServerList(_ *http.Request, req ServerListRequest, s Session) (ServerListRe
 		}
 
 		// hide password
-		server.Password = ""
+		if server.Password != "" {
+			server.HasPassword = true
+			server.Password = ""
+		}
 
 		resp.Servers = append(resp.Servers, server)
 	}
