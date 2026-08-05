@@ -50,7 +50,7 @@ func handAuth[reqT any, resT any](handler func(*http.Request, reqT, Session) (re
 		}
 
 		var claims SessionClaims
-		token, err := jwt.ParseWithClaims(r.Header.Get("Authorization"), &claims, func(t *jwt.Token) (any, error) { return jwtSessionKey, nil })
+		token, err := jwt.ParseWithClaims(r.Header.Get("Authorization"), &claims, func(t *jwt.Token) (any, error) { return GetJwtKey("session") })
 		if err != nil {
 			http.Error(w, "", http.StatusBadRequest)
 			return

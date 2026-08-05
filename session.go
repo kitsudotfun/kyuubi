@@ -12,8 +12,6 @@ import (
 	"net/netip"
 	"time"
 
-	_ "embed"
-
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/syumai/workers/cloudflare/kv"
 )
@@ -25,16 +23,6 @@ const (
 	ProofSaltLen    = 16
 
 	SessionNamespace = "KITSU_SESSIONS"
-)
-
-var (
-	//go:embed data/proof.key
-	jwtProofKey []byte
-
-	//go:embed data/session.key
-	jwtSessionKey []byte
-
-	jwtMethod = jwt.SigningMethodHS256
 )
 
 type SessionID [SessionIdLen]byte
@@ -80,6 +68,11 @@ func SessionNew(_ *http.Request, req SessionNewRequest, _ Session) (SessionNewRe
 	var salt [ProofSaltLen]byte
 	rand.Read(salt[:])
 
+	key, err := GetJwtKey("proof")
+	if err != nil {
+		return SessionNewResponse{}, err
+	}
+
 	// create jwt
 	token, err := jwt.NewWithClaims(jwtMethod, SessionClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -89,7 +82,7 @@ func SessionNew(_ *http.Request, req SessionNewRequest, _ Session) (SessionNewRe
 		GameID:     game.ID,
 		Difficulty: ProofDifficulty,
 		Salt:       salt,
-	}).SignedString(jwtProofKey)
+	}).SignedString(key)
 	if err != nil {
 		return SessionNewResponse{}, err
 	}
@@ -111,7 +104,7 @@ type SessionVerifyResponse struct {
 
 func SessionVerify(r *http.Request, req SessionVerifyRequest, _ Session) (SessionVerifyResponse, error) {
 	var claims SessionClaims
-	token, err := jwt.ParseWithClaims(r.Header.Get("Authorization"), &claims, func(t *jwt.Token) (any, error) { return jwtProofKey, nil })
+	token, err := jwt.ParseWithClaims(r.Header.Get("Authorization"), &claims, func(t *jwt.Token) (any, error) { return GetJwtKey("proof") })
 	if err != nil {
 		return SessionVerifyResponse{}, err
 	}
@@ -162,7 +155,12 @@ func SessionVerify(r *http.Request, req SessionVerifyRequest, _ Session) (Sessio
 
 	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(time.Hour * 24))
 
-	tokenStr, err := jwt.NewWithClaims(jwtMethod, claims).SignedString(jwtSessionKey)
+	key, err := GetJwtKey("session")
+	if err != nil {
+		return SessionVerifyResponse{}, err
+	}
+
+	tokenStr, err := jwt.NewWithClaims(jwtMethod, claims).SignedString(key)
 	if err != nil {
 		return SessionVerifyResponse{}, err
 	}
