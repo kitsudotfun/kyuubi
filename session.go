@@ -48,21 +48,21 @@ type Session struct {
 	GameAddr netip.Addr
 }
 
+type SessionClaims struct {
+	jwt.RegisteredClaims
+
+	GameID string `json:"game"`
+
+	Difficulty int                `json:"difficulty"`
+	Salt       [ProofSaltLen]byte `json:"salt"`
+}
+
 type SessionNewRequest struct {
 	GameID string `json:"game"`
 }
 
 type SessionNewResponse struct {
 	Token string `json:"token"`
-
-	Difficulty int                `json:"difficulty"`
-	Salt       [ProofSaltLen]byte `json:"salt"`
-}
-
-type SessionClaims struct {
-	jwt.RegisteredClaims
-
-	GameID string `json:"game"`
 
 	Difficulty int                `json:"difficulty"`
 	Salt       [ProofSaltLen]byte `json:"salt"`

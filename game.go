@@ -1,19 +1,19 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
+	"encoding/gob"
 	"errors"
 
-	_ "embed"
+	"github.com/syumai/workers/cloudflare/kv"
 )
 
-//go:embed data/games.json
-var gamesJson []byte
+const (
+	GameNamespace = "KITSU_GAMES"
+)
 
 type Game struct {
-	ID       string `json:"id"`
-	ProofKey []byte `json:"key"`
+	ID       string
+	ProofKey []byte
 }
 
 var (
@@ -21,15 +21,19 @@ var (
 )
 
 func GetGame(id string) (Game, error) {
-	var games map[string]Game
-	err := json.NewDecoder(bytes.NewReader(gamesJson)).Decode(&games)
+	games, err := kv.NewNamespace(GameNamespace)
+	if err != nil {
+		return Game{}, err
+	}
+	r, err := games.GetReader(id, nil)
 	if err != nil {
 		return Game{}, err
 	}
 
-	game, exists := games[id]
-	if !exists {
-		return Game{}, ErrUnknownGame
+	var game Game
+	err = gob.NewDecoder(r).Decode(&game)
+	if err != nil {
+		return Game{}, err
 	}
 
 	return game, nil

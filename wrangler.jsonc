@@ -21,6 +21,11 @@
 		{
 			"binding": "KITSU_SESSIONS",
 			"id": "2b8e8d989cfc4041bc667b548b437fe5"
+		},
+		{
+			"binding": "KITSU_GAMES",
+			"id": "75ea2e2b964a40fea596192b84c5251d",
+			"remote": true
 		}
 	]
 	/**
