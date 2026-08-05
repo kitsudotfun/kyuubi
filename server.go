@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/netip"
+	"slices"
 
 	"github.com/syumai/workers/cloudflare/kv"
 )
@@ -172,10 +173,10 @@ func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
 		Addr: s.GameAddr,
 	}
 
-	var stored Reservation
-	GetEncodedKV(server.Key()+"|"+s.ID.String(), ReservationNamespace, &stored)
-	if stored != resv {
-		err = PutEncodedKV(server.Key()+"|"+s.ID.String(), ReservationNamespace, resv, &kv.PutOptions{ExpirationTTL: 60})
+	var reservations []Reservation
+	GetEncodedKV(server.Key(), ReservationNamespace, &reservations)
+	if !slices.Contains(reservations, resv) {
+		err = PutEncodedKV(server.Key(), ReservationNamespace, append(reservations, resv), &kv.PutOptions{ExpirationTTL: 60})
 		if err != nil {
 			return ServerJoinResponse{}, err
 		}
@@ -196,25 +197,8 @@ func ServerResvList(_ ServerResvListRequest, s Session) (ServerResvListResponse,
 		return ServerResvListResponse{}, ErrUnknownGameAddr
 	}
 
-	reservations, err := kv.NewNamespace(ReservationNamespace)
-	if err != nil {
-		return ServerResvListResponse{}, err
-	}
-
 	var resp ServerResvListResponse
-	list, err := reservations.List(&kv.ListOptions{Prefix: s.GameID + "|" + s.ID.String() + "|"})
-	if err != nil {
-		return ServerResvListResponse{}, err
-	}
-	for _, item := range list.Keys {
-		var resv Reservation
-		err = GetEncodedKV(item.Name, ReservationNamespace, &resv)
-		if err != nil {
-			continue
-		}
-
-		resp.Reservations = append(resp.Reservations, resv)
-	}
+	GetEncodedKV(s.GameID+"|"+s.ID.String(), ReservationNamespace, &resp.Reservations)
 
 	return resp, nil
 }
