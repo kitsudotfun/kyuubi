@@ -125,7 +125,10 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 		return SessionVerifyResponse{}, err
 	}
 
-	id, _ := base64.RawStdEncoding.DecodeString(claims.Subject)
+	id, err := base64.RawStdEncoding.DecodeString(claims.Subject)
+	if err != nil {
+		return SessionVerifyResponse{}, err
+	}
 
 	var session Session
 	copy(session.ID[:], id)
