@@ -40,25 +40,6 @@ var (
 	ErrBadPassword     = errors.New("bad server password")
 )
 
-func GetServer(id string) (Server, error) {
-	servers, err := kv.NewNamespace(ServerNamespace)
-	if err != nil {
-		return Server{}, err
-	}
-	r, err := servers.GetReader(id, nil)
-	if err != nil {
-		return Server{}, err
-	}
-
-	var server Server
-	err = gob.NewDecoder(r).Decode(&server)
-	if err != nil {
-		return Server{}, err
-	}
-
-	return server, nil
-}
-
 type ServerHeartbeatRequest struct {
 	Server
 }
@@ -190,7 +171,17 @@ func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
 		return ServerJoinResponse{}, ErrUnknownGameAddr
 	}
 
-	server, err := GetServer(s.GameID + "|" + req.ID)
+	servers, err := kv.NewNamespace(ServerNamespace)
+	if err != nil {
+		return ServerJoinResponse{}, err
+	}
+	r, err := servers.GetReader(s.GameID+"|"+req.ID, nil)
+	if err != nil {
+		return ServerJoinResponse{}, err
+	}
+
+	var server Server
+	err = gob.NewDecoder(r).Decode(&server)
 	if err != nil {
 		return ServerJoinResponse{}, err
 	}
