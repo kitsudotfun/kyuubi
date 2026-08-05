@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -13,6 +14,10 @@ const (
 
 var (
 	jwtMethod = jwt.SigningMethodHS256
+)
+
+var (
+	ErrInvalidToken = errors.New("invalid token")
 )
 
 func MustGetJwtKey(id string) []byte {

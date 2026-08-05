@@ -23,7 +23,8 @@ func main() {
 	http.HandleFunc("POST /dev/server/resvlist", handAuth(ServerResvList))
 
 	// natneg
-	http.HandleFunc("POST /dev/natneg/token", handAuth(NatNegToken))
+	http.HandleFunc("POST /dev/natneg/new", handAuth(NatNegNew))
+	http.HandleFunc("POST /dev/natneg/verify", handAuth(NatNegVerify))
 
 	workers.Serve(nil)
 }

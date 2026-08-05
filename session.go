@@ -108,7 +108,7 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 		return SessionVerifyResponse{}, err
 	}
 	if !token.Valid {
-		return SessionVerifyResponse{}, err
+		return SessionVerifyResponse{}, ErrInvalidToken
 	}
 
 	var game Game
