@@ -111,12 +111,6 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 		return SessionVerifyResponse{}, err
 	}
 
-	var session Session
-	err = GetEncodedKV(claims.Subject, SessionNamespace, &session)
-	if err == nil { // error if it exists
-		return SessionVerifyResponse{}, ErrSessionExists
-	}
-
 	var game Game
 	err = GetEncodedKV(claims.GameID, GameNamespace, &game)
 	if err != nil {
@@ -133,6 +127,7 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 
 	id, _ := base64.RawStdEncoding.DecodeString(claims.Subject)
 
+	var session Session
 	copy(session.ID[:], id)
 	session.GameID = claims.GameID
 
