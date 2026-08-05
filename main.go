@@ -13,8 +13,8 @@ import (
 
 func main() {
 	// session
-	http.HandleFunc("POST /dev/session/new", handJson(Session{}, SessionNew))
-	http.HandleFunc("POST /dev/session/verify", handJson(Session{}, SessionVerify))
+	http.HandleFunc("POST /dev/session/new", handJson(SessionNew, Session{}))
+	http.HandleFunc("POST /dev/session/verify", handJson(SessionVerify, Session{}))
 
 	// server
 	http.HandleFunc("POST /dev/server/heartbeat", handAuth(ServerHeartbeat))
@@ -30,7 +30,7 @@ func main() {
 	workers.Serve(nil)
 }
 
-func handJson[reqT any, resT any](session Session, handler func(reqT, Session) (resT, error)) http.HandlerFunc {
+func handJson[reqT any, resT any](handler func(reqT, Session) (resT, error), session Session) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var req reqT
 		err := json.NewDecoder(r.Body).Decode(&req)
@@ -97,6 +97,6 @@ func handAuth[reqT any, resT any](handler func(reqT, Session) (resT, error)) htt
 			return
 		}
 
-		handJson(session, handler)
+		handJson(handler, session)
 	}
 }
