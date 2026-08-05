@@ -127,7 +127,10 @@ func SessionVerify(r *http.Request, req SessionVerifyRequest, _ Session) (Sessio
 		return SessionVerifyResponse{}, err
 	}
 
-	game, _ := GetGame(claims.GameID)
+	game, err := GetGame(claims.GameID)
+	if err != nil {
+		return SessionVerifyResponse{}, err
+	}
 
 	hash := sha256.New()
 	hash.Write([]byte(game.ProofKey))
