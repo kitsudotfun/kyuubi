@@ -63,7 +63,7 @@ func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
 	var game Game
 	err := GetEncodedKV(req.GameID, GameNamespace, &game)
 	if err != nil {
-		return SessionNewResponse{}, err
+		return SessionNewResponse{}, ErrUnknownGame
 	}
 
 	var sessionID SessionID
@@ -120,7 +120,7 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 	var game Game
 	err = GetEncodedKV(claims.GameID, GameNamespace, &game)
 	if err != nil {
-		return SessionVerifyResponse{}, err
+		return SessionVerifyResponse{}, ErrUnknownGame
 	}
 
 	hash := sha256.New()

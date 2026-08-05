@@ -1,7 +1,6 @@
 package main
 
 import (
-	"errors"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -9,10 +8,6 @@ import (
 
 const (
 	NatNegServer = "natneg.kitsu.fun:62426"
-)
-
-var (
-	ErrGameAddrSet = errors.New("game address already set")
 )
 
 type NatNegTokenRequest struct{}

@@ -157,7 +157,7 @@ func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
 	var server Server
 	err := GetEncodedKV(s.GameID+"|"+req.ID, ServerNamespace, &server)
 	if err != nil {
-		return ServerJoinResponse{}, ErrUnknownGameAddr
+		return ServerJoinResponse{}, ErrUnknownServer
 	}
 	if server.Password != req.Password {
 		return ServerJoinResponse{}, ErrBadPassword
