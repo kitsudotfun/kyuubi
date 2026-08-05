@@ -117,6 +117,11 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 		return SessionVerifyResponse{}, ErrUnknownGame
 	}
 
+	err = GetEncodedKV(claims.Subject, SessionNamespace, &Session{})
+	if err == nil {
+		return SessionVerifyResponse{}, ErrSessionExists
+	}
+
 	hash := sha256.New()
 	hash.Write([]byte(game.ProofKey))
 	hash.Write(claims.Salt[:])

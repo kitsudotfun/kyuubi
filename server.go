@@ -53,9 +53,13 @@ func ServerHeartbeat(req ServerHeartbeatRequest, s Session) (ServerHeartbeatResp
 	server.GameID = s.GameID
 	server.Addr = s.GameAddr
 
-	err := PutEncodedKV(server.Key(), ServerNamespace, server, &kv.PutOptions{ExpirationTTL: 60 * 5})
-	if err != nil {
-		return ServerHeartbeatResponse{}, err
+	var stored Server
+	GetEncodedKV(server.Key(), ServerNamespace, &stored)
+	if stored != server {
+		err := PutEncodedKV(server.Key(), ServerNamespace, server, &kv.PutOptions{ExpirationTTL: 60 * 60}) // 1 hour
+		if err != nil {
+			return ServerHeartbeatResponse{}, err
+		}
 	}
 
 	return ServerHeartbeatResponse{}, nil
@@ -163,12 +167,18 @@ func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
 		return ServerJoinResponse{}, ErrBadPassword
 	}
 
-	err = PutEncodedKV(server.Key()+"|"+s.ID.String(), ReservationNamespace, Reservation{
+	resv := Reservation{
 		ID:   s.ID,
 		Addr: s.GameAddr,
-	}, &kv.PutOptions{ExpirationTTL: 60})
-	if err != nil {
-		return ServerJoinResponse{}, err
+	}
+
+	var stored Reservation
+	GetEncodedKV(server.Key()+"|"+s.ID.String(), ReservationNamespace, &stored)
+	if stored != resv {
+		err = PutEncodedKV(server.Key()+"|"+s.ID.String(), ReservationNamespace, resv, &kv.PutOptions{ExpirationTTL: 60})
+		if err != nil {
+			return ServerJoinResponse{}, err
+		}
 	}
 
 	return ServerJoinResponse{
