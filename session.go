@@ -32,8 +32,10 @@ func (sid SessionID) String() string {
 }
 
 type Session struct {
-	ID       SessionID
-	GameAddr netip.Addr
+	ID SessionID
+
+	GameID   string
+	GameAddr netip.AddrPort
 }
 
 type SessionClaims struct {
@@ -48,7 +50,6 @@ type SessionClaims struct {
 type SessionNewRequest struct {
 	GameID string `json:"game"`
 }
-
 type SessionNewResponse struct {
 	Token string `json:"token"`
 
@@ -97,7 +98,6 @@ func SessionNew(_ *http.Request, req SessionNewRequest, _ Session) (SessionNewRe
 type SessionVerifyRequest struct {
 	Proof []byte `json:"proof"`
 }
-
 type SessionVerifyResponse struct {
 	Token string `json:"token"`
 }
@@ -144,6 +144,7 @@ func SessionVerify(r *http.Request, req SessionVerifyRequest, _ Session) (Sessio
 
 	var session Session
 	copy(session.ID[:], id)
+	session.GameID = claims.GameID
 
 	var buf bytes.Buffer
 	err = gob.NewEncoder(&buf).Encode(session)

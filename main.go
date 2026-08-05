@@ -15,6 +15,17 @@ func main() {
 	http.HandleFunc("POST /dev/session/new", handJson(Session{}, SessionNew))
 	http.HandleFunc("POST /dev/session/verify", handJson(Session{}, SessionVerify))
 
+	// server
+	http.HandleFunc("POST /dev/server/heartbeat", handAuth(ServerHeartbeat))
+	http.HandleFunc("POST /dev/server/delete", handAuth(ServerDelete))
+
+	http.HandleFunc("POST /dev/server/list", handAuth(ServerList))
+	http.HandleFunc("POST /dev/server/join", handAuth(ServerJoin))
+	http.HandleFunc("POST /dev/server/resvlist", handAuth(ServerResvList))
+
+	// natneg
+	http.HandleFunc("POST /dev/natneg/token", handAuth(NatNegToken))
+
 	workers.Serve(nil)
 }
 
