@@ -1,12 +1,11 @@
 package main
 
 import (
-	"bytes"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/gob"
+	"errors"
 	"math/bits"
 	"net/netip"
 	"time"
@@ -46,6 +45,10 @@ type SessionClaims struct {
 	Salt       [ProofSaltLen]byte `json:"salt"`
 }
 
+var (
+	ErrSessionExists = errors.New("session exists")
+)
+
 type SessionNewRequest struct {
 	GameID string `json:"game"`
 }
@@ -57,7 +60,8 @@ type SessionNewResponse struct {
 }
 
 func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
-	game, err := GetGame(req.GameID)
+	var game Game
+	err := GetEncodedKV(req.GameID, GameNamespace, &game)
 	if err != nil {
 		return SessionNewResponse{}, err
 	}
@@ -68,11 +72,6 @@ func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
 	var salt [ProofSaltLen]byte
 	rand.Read(salt[:])
 
-	key, err := GetJwtKey("proof")
-	if err != nil {
-		return SessionNewResponse{}, err
-	}
-
 	// create jwt
 	token, err := jwt.NewWithClaims(jwtMethod, SessionClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
@@ -82,7 +81,7 @@ func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
 		GameID:     game.ID,
 		Difficulty: ProofDifficulty,
 		Salt:       salt,
-	}).SignedString(key)
+	}).SignedString(MustGetJwtKey("proof"))
 	if err != nil {
 		return SessionNewResponse{}, err
 	}
@@ -104,7 +103,7 @@ type SessionVerifyResponse struct {
 
 func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, error) {
 	var claims SessionClaims
-	token, err := jwt.ParseWithClaims(req.Token, &claims, func(t *jwt.Token) (any, error) { return GetJwtKey("proof") })
+	token, err := jwt.ParseWithClaims(req.Token, &claims, func(t *jwt.Token) (any, error) { return MustGetJwtKey("proof"), nil })
 	if err != nil {
 		return SessionVerifyResponse{}, err
 	}
@@ -112,22 +111,14 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 		return SessionVerifyResponse{}, err
 	}
 
-	sessions, err := kv.NewNamespace(SessionNamespace)
-	if err != nil {
-		return SessionVerifyResponse{}, err
+	var session Session
+	err = GetEncodedKV(claims.Subject, SessionNamespace, &session)
+	if err == nil { // error if it exists
+		return SessionVerifyResponse{}, ErrSessionExists
 	}
 
-	// reject if session already exists
-	sessionV, err := sessions.GetString(claims.Subject, nil)
-	if err != nil {
-		return SessionVerifyResponse{}, err
-
-	}
-	if sessionV == "" {
-		return SessionVerifyResponse{}, err
-	}
-
-	game, err := GetGame(claims.GameID)
+	var game Game
+	err = GetEncodedKV(claims.GameID, GameNamespace, &game)
 	if err != nil {
 		return SessionVerifyResponse{}, err
 	}
@@ -142,29 +133,17 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 
 	id, _ := base64.RawStdEncoding.DecodeString(claims.Subject)
 
-	var session Session
 	copy(session.ID[:], id)
 	session.GameID = claims.GameID
 
-	var buf bytes.Buffer
-	err = gob.NewEncoder(&buf).Encode(session)
-	if err != nil {
-		return SessionVerifyResponse{}, err
-	}
-
-	err = sessions.PutReader(session.ID.String(), &buf, &kv.PutOptions{ExpirationTTL: 60 * 60 * 24})
+	err = PutEncodedKV(session.ID.String(), SessionNamespace, session, &kv.PutOptions{ExpirationTTL: 60 * 60 * 24})
 	if err != nil {
 		return SessionVerifyResponse{}, err
 	}
 
 	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(time.Hour * 24))
 
-	key, err := GetJwtKey("session")
-	if err != nil {
-		return SessionVerifyResponse{}, err
-	}
-
-	tokenStr, err := jwt.NewWithClaims(jwtMethod, claims).SignedString(key)
+	tokenStr, err := jwt.NewWithClaims(jwtMethod, claims).SignedString(MustGetJwtKey("session"))
 	if err != nil {
 		return SessionVerifyResponse{}, err
 	}

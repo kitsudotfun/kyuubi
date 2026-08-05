@@ -1,14 +1,12 @@
 package main
 
 import (
-	"encoding/gob"
 	"encoding/json"
 	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/syumai/workers"
-	"github.com/syumai/workers/cloudflare/kv"
 )
 
 func main() {
@@ -62,7 +60,7 @@ func handAuth[reqT any, resT any](handler func(reqT, Session) (resT, error)) htt
 		}
 
 		var claims SessionClaims
-		token, err := jwt.ParseWithClaims(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), &claims, func(t *jwt.Token) (any, error) { return GetJwtKey("session") })
+		token, err := jwt.ParseWithClaims(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), &claims, func(t *jwt.Token) (any, error) { return MustGetJwtKey("session"), nil })
 		if err != nil {
 			http.Error(w, "", http.StatusBadRequest)
 			return
@@ -72,19 +70,8 @@ func handAuth[reqT any, resT any](handler func(reqT, Session) (resT, error)) htt
 			return
 		}
 
-		sessions, err := kv.NewNamespace(SessionNamespace)
-		if err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-		sessionReader, err := sessions.GetReader(claims.Subject, nil)
-		if err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
-			return
-		}
-
 		var session Session
-		err = gob.NewDecoder(sessionReader).Decode(&session)
+		err = GetEncodedKV(claims.Subject, SessionNamespace, &session)
 		if err != nil {
 			http.Error(w, "", http.StatusInternalServerError)
 			return

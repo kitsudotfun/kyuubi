@@ -15,19 +15,19 @@ var (
 	jwtMethod = jwt.SigningMethodHS256
 )
 
-func GetJwtKey(id string) ([]byte, error) {
+func MustGetJwtKey(id string) []byte {
 	keys, err := kv.NewNamespace(JwtKeyNamespace)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	r, err := keys.GetReader(id, nil)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 	key, err := io.ReadAll(r)
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
 
-	return key, nil
+	return key
 }

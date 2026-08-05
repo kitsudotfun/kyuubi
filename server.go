@@ -1,8 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/gob"
 	"errors"
 	"net/netip"
 
@@ -55,17 +53,7 @@ func ServerHeartbeat(req ServerHeartbeatRequest, s Session) (ServerHeartbeatResp
 	server.GameID = s.GameID
 	server.Addr = s.GameAddr
 
-	var buf bytes.Buffer
-	err := gob.NewEncoder(&buf).Encode(server)
-	if err != nil {
-		return ServerHeartbeatResponse{}, err
-	}
-
-	servers, err := kv.NewNamespace(ServerNamespace)
-	if err != nil {
-		return ServerHeartbeatResponse{}, err
-	}
-	err = servers.PutReader(server.Key(), &buf, &kv.PutOptions{ExpirationTTL: 60 * 5})
+	err := PutEncodedKV(server.Key(), ServerNamespace, server, &kv.PutOptions{ExpirationTTL: 60 * 5})
 	if err != nil {
 		return ServerHeartbeatResponse{}, err
 	}
@@ -125,13 +113,8 @@ func ServerList(req ServerListRequest, s Session) (ServerListResponse, error) {
 		resp.Cursor = list.Cursor
 	}
 	for _, item := range list.Keys {
-		r, err := servers.GetReader(item.Name, nil)
-		if err != nil {
-			continue
-		}
-
 		var server Server
-		err = gob.NewDecoder(r).Decode(&server)
+		err = GetEncodedKV(item.Name, ServerNamespace, &server)
 		if err != nil {
 			continue
 		}
@@ -171,38 +154,19 @@ func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
 		return ServerJoinResponse{}, ErrUnknownGameAddr
 	}
 
-	servers, err := kv.NewNamespace(ServerNamespace)
-	if err != nil {
-		return ServerJoinResponse{}, err
-	}
-	r, err := servers.GetReader(s.GameID+"|"+req.ID, nil)
-	if err != nil {
-		return ServerJoinResponse{}, err
-	}
-
 	var server Server
-	err = gob.NewDecoder(r).Decode(&server)
+	err := GetEncodedKV(s.GameID+"|"+req.ID, ServerNamespace, &server)
 	if err != nil {
-		return ServerJoinResponse{}, err
+		return ServerJoinResponse{}, ErrUnknownGameAddr
 	}
 	if server.Password != req.Password {
 		return ServerJoinResponse{}, ErrBadPassword
 	}
 
-	reservations, err := kv.NewNamespace(ReservationNamespace)
-	if err != nil {
-		return ServerJoinResponse{}, err
-	}
-
-	var buf bytes.Buffer
-	err = gob.NewEncoder(&buf).Encode(Reservation{
+	err = PutEncodedKV(s.GameID+"|"+req.ID+"|"+s.ID.String(), ReservationNamespace, Reservation{
 		ID:   s.ID,
 		Addr: s.GameAddr,
-	})
-	if err != nil {
-		return ServerJoinResponse{}, err
-	}
-	err = reservations.PutReader(s.GameID+"|"+req.ID+"|"+s.ID.String(), &buf, &kv.PutOptions{ExpirationTTL: 60})
+	}, &kv.PutOptions{ExpirationTTL: 60})
 	if err != nil {
 		return ServerJoinResponse{}, err
 	}
@@ -233,13 +197,8 @@ func ServerResvList(_ ServerResvListRequest, s Session) (ServerResvListResponse,
 		return ServerResvListResponse{}, err
 	}
 	for _, item := range list.Keys {
-		r, err := reservations.GetReader(item.Name, nil)
-		if err != nil {
-			continue
-		}
-
 		var resv Reservation
-		err = gob.NewDecoder(r).Decode(&resv)
+		err = GetEncodedKV(item.Name, ReservationNamespace, &resv)
 		if err != nil {
 			continue
 		}
