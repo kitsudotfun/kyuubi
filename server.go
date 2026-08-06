@@ -3,8 +3,9 @@ package main
 import (
 	"errors"
 	"net/netip"
-	"slices"
+	"time"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/syumai/workers/cloudflare/kv"
 )
 
@@ -146,12 +147,14 @@ type ServerJoinRequest struct {
 	Password string `json:"password"`
 }
 type ServerJoinResponse struct {
-	Addr netip.AddrPort `json:"addr"`
+	Token string `json:"token"`
 }
 
-type Reservation struct {
-	ID   SessionID      `json:"id"`
-	Addr netip.AddrPort `json:"addr"`
+type ServerJoinClaims struct {
+	jwt.RegisteredClaims
+
+	ServerID   SessionID      `json:"server_id"`
+	ServerAddr netip.AddrPort `json:"server_addr"`
 }
 
 func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
@@ -168,37 +171,20 @@ func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
 		return ServerJoinResponse{}, ErrBadPassword
 	}
 
-	resv := Reservation{
-		ID:   s.ID,
-		Addr: s.GameAddr,
-	}
-
-	var reservations []Reservation
-	GetEncodedKV(server.Key(), ReservationNamespace, &reservations)
-	if !slices.Contains(reservations, resv) {
-		err = PutEncodedKV(server.Key(), ReservationNamespace, append(reservations, resv), &kv.PutOptions{ExpirationTTL: 60})
-		if err != nil {
-			return ServerJoinResponse{}, err
-		}
+	token, err := jwt.NewWithClaims(jwtMethod, ServerJoinClaims{
+		RegisteredClaims: jwt.RegisteredClaims{
+			Subject:   s.ID.String(),
+			Audience:  jwt.ClaimStrings{"natneg_join"},
+			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Minute)),
+		},
+		ServerID:   server.ID,
+		ServerAddr: server.Addr,
+	}).SignedString(MustGetJwtKey("natneg"))
+	if err != nil {
+		return ServerJoinResponse{}, err
 	}
 
 	return ServerJoinResponse{
-		Addr: server.Addr,
+		Token: token,
 	}, nil
-}
-
-type ServerResvListRequest struct{}
-type ServerResvListResponse struct {
-	Reservations []Reservation `json:"reservations"`
-}
-
-func ServerResvList(_ ServerResvListRequest, s Session) (ServerResvListResponse, error) {
-	if !s.GameAddr.IsValid() {
-		return ServerResvListResponse{}, ErrUnknownGameAddr
-	}
-
-	var resp ServerResvListResponse
-	GetEncodedKV(s.GameID+"|"+s.ID.String(), ReservationNamespace, &resp.Reservations)
-
-	return resp, nil
 }

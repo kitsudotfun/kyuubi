@@ -32,10 +32,6 @@
 			"binding": "KITSU_JWT_KEYS",
 			"id": "82410dedf7de427e9b32c968c1d0056f",
 			"remote": true
-		},
-		{
-			"binding": "KITSU_RESERVATIONS",
-			"id": "c3636af9491d41ff939e0db799c2961f"
 		}
 	]
 	/**

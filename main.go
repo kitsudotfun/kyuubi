@@ -20,7 +20,6 @@ func main() {
 
 	http.HandleFunc("POST /dev/server/list", handAuth(ServerList))
 	http.HandleFunc("POST /dev/server/join", handAuth(ServerJoin))
-	http.HandleFunc("POST /dev/server/resvlist", handAuth(ServerResvList))
 
 	// natneg
 	http.HandleFunc("POST /dev/natneg/new", handAuth(NatNegNew))
