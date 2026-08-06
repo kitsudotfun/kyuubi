@@ -10,8 +10,7 @@ import (
 )
 
 const (
-	ServerNamespace      = "KITSU_SERVERS"
-	ReservationNamespace = "KITSU_RESERVATIONS"
+	ServerNamespace = "KITSU_SERVERS"
 )
 
 type Server struct {
