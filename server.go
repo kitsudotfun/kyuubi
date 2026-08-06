@@ -139,7 +139,7 @@ func ServerList(req ServerListRequest, s Session) (ServerListResponse, error) {
 }
 
 type ServerJoinRequest struct {
-	ID       string `json:"id"`
+	ServerID string `json:"server_id"`
 	Password string `json:"password"`
 }
 type ServerJoinResponse struct {
@@ -155,7 +155,7 @@ type ServerJoinClaims struct {
 
 func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
 	var server Server
-	err := GetEncodedKV(s.GameID+"|"+req.ID, ServerNamespace, &server)
+	err := GetEncodedKV(s.GameID+"|"+req.ServerID, ServerNamespace, &server)
 	if err != nil {
 		return ServerJoinResponse{}, ErrUnknownServer
 	}
