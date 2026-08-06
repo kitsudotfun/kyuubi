@@ -77,13 +77,6 @@ func handAuth[reqT any, resT any](handler func(reqT, Session) (resT, error)) htt
 			return
 		}
 
-		var req reqT
-		err = json.NewDecoder(r.Body).Decode(&req)
-		if err != nil {
-			http.Error(w, "", http.StatusBadRequest)
-			return
-		}
-
-		handJson(handler, session)
+		handJson(handler, session).ServeHTTP(w, r)
 	}
 }
