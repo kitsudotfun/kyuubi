@@ -97,10 +97,6 @@ type ServerListResponse struct {
 }
 
 func ServerList(req ServerListRequest, s Session) (ServerListResponse, error) {
-	if !s.GameAddr.IsValid() {
-		return ServerListResponse{}, ErrUnknownGameAddr
-	}
-
 	servers, err := kv.NewNamespace(ServerNamespace)
 	if err != nil {
 		return ServerListResponse{}, err
@@ -158,10 +154,6 @@ type ServerJoinClaims struct {
 }
 
 func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
-	if !s.GameAddr.IsValid() {
-		return ServerJoinResponse{}, ErrUnknownGameAddr
-	}
-
 	var server Server
 	err := GetEncodedKV(s.GameID+"|"+req.ID, ServerNamespace, &server)
 	if err != nil {
