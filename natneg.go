@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/netip"
+	"slices"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -36,6 +37,7 @@ func NatNegNew(_ NatNegNewRequest, s Session) (NatNegNewResponse, error) {
 
 	token, err := jwt.NewWithClaims(jwtMethod, jwt.RegisteredClaims{
 		Subject:   s.ID.String(),
+		Audience:  jwt.ClaimStrings{"natneg_proof"},
 		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Minute)),
 	}).SignedString(MustGetJwtKey("natneg"))
 	if err != nil {
@@ -67,7 +69,7 @@ func NatNegVerify(req NatNegVerifyRequest, s Session) (NatNegVerifyResponse, err
 	if err != nil {
 		return NatNegVerifyResponse{}, err
 	}
-	if !token.Valid || claims.Subject != s.ID.String() || !claims.Addr.IsValid() {
+	if !token.Valid || claims.Subject != s.ID.String() || !slices.Contains(claims.Audience, "natneg_discover") || !claims.Addr.IsValid() {
 		return NatNegVerifyResponse{}, ErrInvalidToken
 	}
 
