@@ -1,44 +1,33 @@
 package main
 
 import (
-	"errors"
 	"net/netip"
-	"slices"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/syumai/workers/cloudflare/kv"
 )
 
 const (
 	NatNegServer = "natneg.kitsu.fun:62426"
 )
 
-var (
-	ErrGameAddrSet = errors.New("game address already set")
-)
-
-type NatNegNewRequest struct{}
-type NatNegNewResponse struct {
+type NatNegTokenRequest struct{}
+type NatNegTokenResponse struct {
 	Token  string `json:"token"`
 	Server string `json:"server"`
 }
 
-func NatNegNew(_ NatNegNewRequest, s Session) (NatNegNewResponse, error) {
-	if s.GameAddr.IsValid() {
-		return NatNegNewResponse{}, ErrGameAddrSet
-	}
-
+func NatNegToken(_ NatNegTokenRequest, s Session) (NatNegTokenResponse, error) {
 	token, err := jwt.NewWithClaims(jwtMethod, jwt.RegisteredClaims{
 		Subject:   s.ID.String(),
-		Audience:  jwt.ClaimStrings{"natneg_proof"},
+		Audience:  jwt.ClaimStrings{"natneg_discover"},
 		ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Minute)),
 	}).SignedString(MustGetJwtKey("natneg"))
 	if err != nil {
-		return NatNegNewResponse{}, err
+		return NatNegTokenResponse{}, err
 	}
 
-	return NatNegNewResponse{
+	return NatNegTokenResponse{
 		Token:  token,
 		Server: NatNegServer,
 	}, nil
@@ -55,28 +44,4 @@ type NatNegClaims struct {
 	jwt.RegisteredClaims
 
 	Addr netip.AddrPort `json:"addr"`
-}
-
-func NatNegVerify(req NatNegVerifyRequest, s Session) (NatNegVerifyResponse, error) {
-	if s.GameAddr.IsValid() {
-		return NatNegVerifyResponse{}, ErrGameAddrSet
-	}
-
-	var claims NatNegClaims
-	token, err := jwt.ParseWithClaims(req.Token, &claims, func(t *jwt.Token) (any, error) { return MustGetJwtKey("natneg"), nil })
-	if err != nil {
-		return NatNegVerifyResponse{}, err
-	}
-	if !token.Valid || claims.Subject != s.ID.String() || !slices.Contains(claims.Audience, "natneg_discover") || !claims.Addr.IsValid() {
-		return NatNegVerifyResponse{}, ErrInvalidToken
-	}
-
-	s.GameAddr = claims.Addr
-
-	err = PutEncodedKV(s.ID.String(), SessionNamespace, s, &kv.PutOptions{ExpirationTTL: 60 * 60 * 24})
-	if err != nil {
-		return NatNegVerifyResponse{}, err
-	}
-
-	return NatNegVerifyResponse{Addr: s.GameAddr}, nil
 }

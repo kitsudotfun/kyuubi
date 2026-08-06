@@ -7,11 +7,9 @@ import (
 	"encoding/binary"
 	"errors"
 	"math/bits"
-	"net/netip"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/syumai/workers/cloudflare/kv"
 )
 
 const (
@@ -19,8 +17,6 @@ const (
 
 	ProofDifficulty = 24 // bits
 	ProofSaltLen    = 16
-
-	SessionNamespace = "KITSU_SESSIONS"
 )
 
 type SessionID [SessionIdLen]byte
@@ -29,11 +25,20 @@ func (sid SessionID) String() string {
 	return base64.RawStdEncoding.EncodeToString(sid[:])
 }
 
-type Session struct {
-	ID SessionID
+func (sid *SessionID) FromString(s string) error {
+	b, err := base64.RawStdEncoding.DecodeString(s)
+	if err != nil {
+		return err
+	}
 
-	GameID   string
-	GameAddr netip.AddrPort
+	copy(sid[:], b)
+
+	return nil
+}
+
+type Session struct {
+	ID     SessionID
+	GameID string
 }
 
 type SessionClaims struct {
@@ -117,11 +122,6 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 		return SessionVerifyResponse{}, ErrUnknownGame
 	}
 
-	err = GetEncodedKV(claims.Subject, SessionNamespace, &Session{})
-	if err == nil {
-		return SessionVerifyResponse{}, ErrSessionExists
-	}
-
 	hash := sha256.New()
 	hash.Write([]byte(game.ProofKey))
 	hash.Write(claims.Salt[:])
@@ -138,11 +138,6 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 	var session Session
 	copy(session.ID[:], id)
 	session.GameID = claims.GameID
-
-	err = PutEncodedKV(session.ID.String(), SessionNamespace, session, &kv.PutOptions{ExpirationTTL: 60 * 60 * 24})
-	if err != nil {
-		return SessionVerifyResponse{}, err
-	}
 
 	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(time.Hour * 24))
 

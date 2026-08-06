@@ -22,8 +22,7 @@ func main() {
 	http.HandleFunc("POST /dev/server/join", handAuth(ServerJoin))
 
 	// natneg
-	http.HandleFunc("POST /dev/natneg/new", handAuth(NatNegNew))
-	http.HandleFunc("POST /dev/natneg/verify", handAuth(NatNegVerify))
+	http.HandleFunc("POST /dev/natneg/token", handAuth(NatNegToken))
 
 	workers.Serve(nil)
 }
@@ -71,11 +70,8 @@ func handAuth[reqT any, resT any](handler func(reqT, Session) (resT, error)) htt
 		}
 
 		var session Session
-		err = GetEncodedKV(claims.Subject, SessionNamespace, &session)
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			return
-		}
+		session.ID.FromString(claims.Subject)
+		session.GameID = claims.GameID
 
 		handJson(handler, session).ServeHTTP(w, r)
 	}

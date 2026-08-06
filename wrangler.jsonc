@@ -42,10 +42,6 @@
 			"remote": true
 		},
 		{
-			"binding": "KITSU_SESSIONS",
-			"id": "2b8e8d989cfc4041bc667b548b437fe5"
-		},
-		{
 			"binding": "KITSU_SERVERS",
 			"id": "5b82a810a5ef4104ab1f0eba7c88fd60"
 		}

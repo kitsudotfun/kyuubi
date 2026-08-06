@@ -3,6 +3,7 @@ package main
 import (
 	"errors"
 	"net/netip"
+	"slices"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -41,18 +42,24 @@ var (
 
 type ServerHeartbeatRequest struct {
 	Server
+	Token string `json:"token"`
 }
 type ServerHeartbeatResponse struct{}
 
 func ServerHeartbeat(req ServerHeartbeatRequest, s Session) (ServerHeartbeatResponse, error) {
-	if !s.GameAddr.IsValid() {
-		return ServerHeartbeatResponse{}, ErrUnknownGameAddr
+	var claims NatNegClaims
+	token, err := jwt.ParseWithClaims(req.Token, &claims, func(t *jwt.Token) (any, error) { return MustGetJwtKey("natneg"), nil })
+	if err != nil {
+		return ServerHeartbeatResponse{}, ErrInvalidToken
+	}
+	if !token.Valid || !slices.Contains(claims.Audience, "natneg_attest") || claims.Subject != s.ID.String() {
+		return ServerHeartbeatResponse{}, ErrInvalidToken
 	}
 
 	server := req.Server
 	server.ID = s.ID
 	server.GameID = s.GameID
-	server.Addr = s.GameAddr
+	server.Addr = claims.Addr
 
 	var stored Server
 	GetEncodedKV(server.Key(), ServerNamespace, &stored)
@@ -70,8 +77,9 @@ type ServerDeleteRequest struct{}
 type ServerDeleteResponse struct{}
 
 func ServerDelete(req ServerDeleteRequest, s Session) (ServerDeleteResponse, error) {
-	if !s.GameAddr.IsValid() {
-		return ServerDeleteResponse{}, ErrUnknownGameAddr
+	err := GetEncodedKV(s.GameID+"|"+s.ID.String(), ServerNamespace, &Server{})
+	if err != nil {
+		return ServerDeleteResponse{}, ErrUnknownServer
 	}
 
 	servers, err := kv.NewNamespace(ServerNamespace)
