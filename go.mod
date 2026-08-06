@@ -1,4 +1,4 @@
-module kitsuapi
+module kyuubi
 
 go 1.26.5
 
