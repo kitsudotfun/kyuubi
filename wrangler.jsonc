@@ -20,10 +20,6 @@
 	],
 	"kv_namespaces": [
 		{
-			"binding": "KITSU_SESSIONS",
-			"id": "2b8e8d989cfc4041bc667b548b437fe5"
-		},
-		{
 			"binding": "KITSU_GAMES",
 			"id": "75ea2e2b964a40fea596192b84c5251d",
 			"remote": true
@@ -32,6 +28,14 @@
 			"binding": "KITSU_JWT_KEYS",
 			"id": "82410dedf7de427e9b32c968c1d0056f",
 			"remote": true
+		},
+		{
+			"binding": "KITSU_SESSIONS",
+			"id": "2b8e8d989cfc4041bc667b548b437fe5"
+		},
+		{
+			"binding": "KITSU_SERVERS",
+			"id": "5b82a810a5ef4104ab1f0eba7c88fd60"
 		}
 	]
 	/**
