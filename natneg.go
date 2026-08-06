@@ -52,7 +52,7 @@ type NatNegVerifyRequest struct {
 	Token string `json:"token"`
 }
 type NatNegVerifyResponse struct {
-	Addr netip.Addr `json:"addr"`
+	Addr netip.AddrPort `json:"addr"`
 }
 
 func NatNegVerify(req NatNegVerifyRequest, s Session) (NatNegVerifyResponse, error) {
@@ -81,5 +81,5 @@ func NatNegVerify(req NatNegVerifyRequest, s Session) (NatNegVerifyResponse, err
 		return NatNegVerifyResponse{}, err
 	}
 
-	return NatNegVerifyResponse{Addr: s.GameAddr.Addr()}, nil
+	return NatNegVerifyResponse{Addr: s.GameAddr}, nil
 }
