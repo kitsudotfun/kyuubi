@@ -33,7 +33,8 @@ const (
 	getServers = `
 	SELECT id, game, addr, name, hidden, password, players, max_players, data 
 	FROM servers 
-	WHERE game = ?`
+	WHERE game = ? 
+	AND updated > DATETIME('now', '-5 minutes')`
 )
 
 func PutServer(server Server) error {
@@ -42,7 +43,7 @@ func PutServer(server Server) error {
 		return err
 	}
 
-	_, err = MustGetDB().Exec(putServer, server.ID, server.GameID, server.Addr, server.Name, server.Hidden, server.Password, server.Players, server.MaxPlayers, data)
+	_, err = MustGetDB().Exec(putServer, server.ID, server.GameID, server.Addr, server.Name, server.Hidden, server.Password, server.Players, server.MaxPlayers, string(data))
 	if err != nil {
 		return err
 	}
@@ -86,6 +87,8 @@ func GetServers(game string) ([]Server, error) {
 		return nil, err
 	}
 
+	defer rows.Close()
+
 	var servers []Server
 	for rows.Next() {
 		var server Server
@@ -111,6 +114,9 @@ func GetServers(game string) ([]Server, error) {
 		}
 
 		servers = append(servers, server)
+	}
+	if rows.Err() != nil {
+		return nil, err
 	}
 
 	return servers, nil

@@ -1,4 +1,4 @@
-CREATE TABLE "servers" (
+CREATE TABLE IF NOT EXISTS "servers" (
 	"id" BLOB NOT NULL,
 	"game" TEXT NOT NULL,
 
@@ -17,3 +17,5 @@ CREATE TABLE "servers" (
 
 	PRIMARY KEY ("id", "game")
 );
+
+CREATE INDEX IF NOT EXISTS "servers_game_updated" ON "servers" ("game", "updated");
