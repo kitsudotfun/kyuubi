@@ -33,7 +33,7 @@ func handJson[reqT any, resT any](handler func(reqT, Session) (resT, error), ses
 		var req reqT
 		err := json.NewDecoder(r.Body).Decode(&req)
 		if err != nil {
-			http.Error(w, "", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 
@@ -46,7 +46,7 @@ func handJson[reqT any, resT any](handler func(reqT, Session) (resT, error), ses
 		w.Header().Set("Content-Type", "application/json")
 		err = json.NewEncoder(w).Encode(res)
 		if err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 	}
@@ -55,25 +55,25 @@ func handJson[reqT any, resT any](handler func(reqT, Session) (resT, error), ses
 func handAuth[reqT any, resT any](handler func(reqT, Session) (resT, error)) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if r.Header.Get("Authorization") == "" {
-			http.Error(w, "", http.StatusUnauthorized)
+			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
 		}
 
 		var claims SessionClaims
 		token, err := jwt.ParseWithClaims(strings.TrimPrefix(r.Header.Get("Authorization"), "Bearer "), &claims, func(t *jwt.Token) (any, error) { return MustGetJwtKey("session"), nil })
 		if err != nil {
-			http.Error(w, "", http.StatusBadRequest)
+			http.Error(w, err.Error(), http.StatusBadRequest)
 			return
 		}
 		if !token.Valid {
-			http.Error(w, "", http.StatusUnauthorized)
+			http.Error(w, "invalid token", http.StatusUnauthorized)
 			return
 		}
 
 		var session Session
 		err = GetEncodedKV(claims.Subject, SessionNamespace, &session)
 		if err != nil {
-			http.Error(w, "", http.StatusInternalServerError)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
 			return
 		}
 
