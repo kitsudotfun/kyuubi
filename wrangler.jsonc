@@ -44,7 +44,7 @@
 	],
 	"d1_databases": [
 		{
-			"binding": "kitsu",
+			"binding": "KITSU_DB",
 			"database_name": "kitsu",
 			"database_id": "b6b3217b-cc6e-4176-b2ed-3608db50bc04"
 		}

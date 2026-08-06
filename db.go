@@ -8,7 +8,7 @@ import (
 	_ "github.com/syumai/workers/cloudflare/d1"
 )
 
-const DatabaseName = "kitsu"
+const DatabaseName = "KITSU_DB"
 
 func MustGetDB() *sql.DB {
 	db, err := sql.Open("d1", DatabaseName)
