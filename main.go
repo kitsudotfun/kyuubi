@@ -21,9 +21,6 @@ func main() {
 	http.HandleFunc("POST /dev/server/list", handAuth(ServerList))
 	http.HandleFunc("POST /dev/server/join", handAuth(ServerJoin))
 
-	// natneg
-	http.HandleFunc("POST /dev/natneg/token", handAuth(NatNegToken))
-
 	workers.Serve(nil)
 }
 

@@ -103,7 +103,8 @@ type SessionVerifyRequest struct {
 	Proof []byte `json:"proof"`
 }
 type SessionVerifyResponse struct {
-	Token string `json:"token"`
+	Token        string `json:"token"`
+	NatNegServer string `json:"natneg_server"`
 }
 
 func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, error) {
@@ -130,15 +131,6 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 		return SessionVerifyResponse{}, err
 	}
 
-	id, err := base64.RawStdEncoding.DecodeString(claims.Subject)
-	if err != nil {
-		return SessionVerifyResponse{}, err
-	}
-
-	var session Session
-	copy(session.ID[:], id)
-	session.GameID = claims.GameID
-
 	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(time.Hour * 24))
 
 	tokenStr, err := jwt.NewWithClaims(jwtMethod, claims).SignedString(MustGetJwtKey("session"))
@@ -147,6 +139,7 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 	}
 
 	return SessionVerifyResponse{
-		Token: tokenStr,
+		Token:        tokenStr,
+		NatNegServer: NatNegServer,
 	}, nil
 }
