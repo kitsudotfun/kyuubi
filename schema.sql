@@ -1,0 +1,19 @@
+CREATE TABLE "servers" (
+	"id" BLOB NOT NULL,
+	"game" TEXT NOT NULL,
+
+	"addr" TEXT NOT NULL,
+
+	"name" TEXT NOT NULL DEFAULT 'My Server',
+	"hidden" BOOLEAN NOT NULL DEFAULT FALSE,
+	"password" TEXT NOT NULL DEFAULT "",
+
+	"players" INTEGER NOT NULL DEFAULT 0,
+	"max_players" INTEGER NOT NULL DEFAULT 0,
+
+	"data" TEXT NOT NULL DEFAULT '{}',
+
+	"updated" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+
+	PRIMARY KEY ("id", "game")
+);

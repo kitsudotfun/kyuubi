@@ -40,10 +40,13 @@
 			"binding": "KITSU_JWT_KEYS",
 			"id": "82410dedf7de427e9b32c968c1d0056f",
 			"remote": true
-		},
+		}
+	],
+	"d1_databases": [
 		{
-			"binding": "KITSU_SERVERS",
-			"id": "5b82a810a5ef4104ab1f0eba7c88fd60"
+			"binding": "kitsu",
+			"database_name": "kitsu",
+			"database_id": "b6b3217b-cc6e-4176-b2ed-3608db50bc04"
 		}
 	]
 	/**

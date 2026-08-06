@@ -7,11 +7,6 @@ import (
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"
-	"github.com/syumai/workers/cloudflare/kv"
-)
-
-const (
-	ServerNamespace = "KITSU_SERVERS"
 )
 
 type Server struct {
@@ -28,6 +23,8 @@ type Server struct {
 
 	Players    int `json:"players"`
 	MaxPlayers int `json:"max_players"`
+
+	Data any `json:"data"`
 }
 
 func (s Server) Key() string {
@@ -50,7 +47,7 @@ func ServerHeartbeat(req ServerHeartbeatRequest, s Session) (ServerHeartbeatResp
 	var claims NatNegClaims
 	token, err := jwt.ParseWithClaims(req.Token, &claims, func(t *jwt.Token) (any, error) { return MustGetJwtKey("natneg"), nil })
 	if err != nil {
-		return ServerHeartbeatResponse{}, ErrInvalidToken
+		return ServerHeartbeatResponse{}, err
 	}
 	if !token.Valid || !slices.Contains(claims.Audience, "natneg_attest") || claims.Subject != s.ID.String() {
 		return ServerHeartbeatResponse{}, ErrInvalidToken
@@ -61,13 +58,9 @@ func ServerHeartbeat(req ServerHeartbeatRequest, s Session) (ServerHeartbeatResp
 	server.GameID = s.GameID
 	server.Addr = claims.Addr
 
-	var stored Server
-	GetEncodedKV(server.Key(), ServerNamespace, &stored)
-	if stored != server {
-		err := PutEncodedKV(server.Key(), ServerNamespace, server, &kv.PutOptions{ExpirationTTL: 60 * 60}) // 1 hour
-		if err != nil {
-			return ServerHeartbeatResponse{}, err
-		}
+	err = PutServer(server)
+	if err != nil {
+		return ServerHeartbeatResponse{}, err
 	}
 
 	return ServerHeartbeatResponse{}, nil
@@ -77,16 +70,7 @@ type ServerDeleteRequest struct{}
 type ServerDeleteResponse struct{}
 
 func ServerDelete(req ServerDeleteRequest, s Session) (ServerDeleteResponse, error) {
-	err := GetEncodedKV(s.GameID+"|"+s.ID.String(), ServerNamespace, &Server{})
-	if err != nil {
-		return ServerDeleteResponse{}, ErrUnknownServer
-	}
-
-	servers, err := kv.NewNamespace(ServerNamespace)
-	if err != nil {
-		return ServerDeleteResponse{}, err
-	}
-	err = servers.Delete(s.GameID + "|" + s.ID.String())
+	err := DeleteServer(s.ID, s.GameID)
 	if err != nil {
 		return ServerDeleteResponse{}, err
 	}
@@ -94,60 +78,25 @@ func ServerDelete(req ServerDeleteRequest, s Session) (ServerDeleteResponse, err
 	return ServerDeleteResponse{}, nil
 }
 
-type ServerListRequest struct {
-	Limit  int    `json:"limit"`
-	Cursor string `json:"cursor"`
-}
+type ServerListRequest struct{}
 type ServerListResponse struct {
-	Cursor  string   `json:"cursor"`
 	Servers []Server `json:"servers"`
 }
 
 func ServerList(req ServerListRequest, s Session) (ServerListResponse, error) {
-	servers, err := kv.NewNamespace(ServerNamespace)
-	if err != nil {
-		return ServerListResponse{}, err
-	}
-	list, err := servers.List(&kv.ListOptions{
-		Limit:  req.Limit,
-		Prefix: s.GameID + "|",
-		Cursor: req.Cursor,
-	})
-	if err != nil {
-		return ServerListResponse{}, err
-	}
-
 	var resp ServerListResponse
-	if !list.ListComplete {
-		resp.Cursor = list.Cursor
-	}
-	for _, item := range list.Keys {
-		var server Server
-		err = GetEncodedKV(item.Name, ServerNamespace, &server)
-		if err != nil {
-			continue
-		}
-
-		// skip hidden servers
-		if server.Hidden {
-			continue
-		}
-
-		// hide password
-		if server.Password != "" {
-			server.HasPassword = true
-			server.Password = ""
-		}
-
-		resp.Servers = append(resp.Servers, server)
+	var err error
+	resp.Servers, err = GetServers(s.GameID)
+	if err != nil {
+		return ServerListResponse{}, err
 	}
 
 	return resp, nil
 }
 
 type ServerJoinRequest struct {
-	ServerID string `json:"server_id"`
-	Password string `json:"password"`
+	ServerID SessionID `json:"server_id"`
+	Password string    `json:"password"`
 }
 type ServerJoinResponse struct {
 	Token string `json:"token"`
@@ -161,8 +110,7 @@ type ServerJoinClaims struct {
 }
 
 func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
-	var server Server
-	err := GetEncodedKV(s.GameID+"|"+req.ServerID, ServerNamespace, &server)
+	server, err := GetServer(req.ServerID, s.GameID)
 	if err != nil {
 		return ServerJoinResponse{}, ErrUnknownServer
 	}
