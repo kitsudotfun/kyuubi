@@ -18,12 +18,6 @@ var (
 	ErrGameAddrSet = errors.New("game address already set")
 )
 
-type NatNegClaims struct {
-	jwt.RegisteredClaims
-
-	Addr netip.AddrPort
-}
-
 type NatNegNewRequest struct{}
 type NatNegNewResponse struct {
 	Token  string `json:"token"`
@@ -57,15 +51,19 @@ type NatNegVerifyResponse struct {
 	Addr netip.AddrPort `json:"addr"`
 }
 
+type NatNegClaims struct {
+	jwt.RegisteredClaims
+
+	Addr netip.AddrPort `json:"addr"`
+}
+
 func NatNegVerify(req NatNegVerifyRequest, s Session) (NatNegVerifyResponse, error) {
 	if s.GameAddr.IsValid() {
 		return NatNegVerifyResponse{}, ErrGameAddrSet
 	}
 
 	var claims NatNegClaims
-	token, err := jwt.ParseWithClaims(req.Token, &claims, func(token *jwt.Token) (any, error) {
-		return MustGetJwtKey("natneg"), nil
-	})
+	token, err := jwt.ParseWithClaims(req.Token, &claims, func(t *jwt.Token) (any, error) { return MustGetJwtKey("natneg"), nil })
 	if err != nil {
 		return NatNegVerifyResponse{}, err
 	}
