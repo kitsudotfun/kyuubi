@@ -67,10 +67,7 @@ func NatNegVerify(req NatNegVerifyRequest, s Session) (NatNegVerifyResponse, err
 	if err != nil {
 		return NatNegVerifyResponse{}, err
 	}
-	if !token.Valid {
-		return NatNegVerifyResponse{}, ErrInvalidToken
-	}
-	if !claims.Addr.IsValid() {
+	if !token.Valid || claims.Subject != s.ID.String() || !claims.Addr.IsValid() {
 		return NatNegVerifyResponse{}, ErrInvalidToken
 	}
 
