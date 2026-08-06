@@ -20,7 +20,7 @@ type Server struct {
 	Addr   netip.AddrPort `json:"-"`
 
 	Name   string `json:"name"`
-	Public bool   `json:"public"`
+	Hidden bool   `json:"hidden"`
 
 	HasPassword bool   `json:"has_password"`
 	Password    string `json:"password"`
@@ -120,8 +120,8 @@ func ServerList(req ServerListRequest, s Session) (ServerListResponse, error) {
 			continue
 		}
 
-		// skip non-public servers
-		if !server.Public {
+		// skip hidden servers
+		if server.Hidden {
 			continue
 		}
 
