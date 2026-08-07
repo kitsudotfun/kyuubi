@@ -46,7 +46,7 @@ type SessionClaims struct {
 }
 
 var (
-	ErrSessionExists = errors.New("session exists")
+	ErrInvalidProof = errors.New("invalid proof")
 )
 
 // /session/new

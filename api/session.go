@@ -67,7 +67,7 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 	hash.Write(claims.Salt[:])
 	hash.Write([]byte(req.Proof))
 	if bits.LeadingZeros64(binary.BigEndian.Uint64(hash.Sum(nil))) < claims.Difficulty {
-		return SessionVerifyResponse{}, err
+		return SessionVerifyResponse{}, ErrInvalidProof
 	}
 
 	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(time.Hour * 24))
