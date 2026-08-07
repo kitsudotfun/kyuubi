@@ -13,10 +13,10 @@ type Server struct {
 	GameID string         `json:"-"`
 	Addr   netip.AddrPort `json:"-"`
 
-	Name   string `json:"name"`
-	Hidden bool   `json:"hidden"`
-
+	Name     string `json:"name"`
 	Password string `json:"password"`
+
+	Hidden bool `json:"hidden"`
 
 	Players    int `json:"players"`
 	MaxPlayers int `json:"max_players"`
