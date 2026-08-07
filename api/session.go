@@ -3,66 +3,14 @@ package api
 import (
 	"crypto/rand"
 	"crypto/sha256"
-	"encoding/base64"
 	"encoding/binary"
-	"errors"
 	"math/bits"
 	"time"
 
+	. "github.com/kitsudotfun/kyuubi/api/defs"
+
 	"github.com/golang-jwt/jwt/v5"
 )
-
-const (
-	SessionIdLen = 8
-
-	ProofDifficulty = 24 // bits
-	ProofSaltLen    = 16
-)
-
-type SessionID [SessionIdLen]byte
-
-func (sid SessionID) String() string {
-	return base64.RawStdEncoding.EncodeToString(sid[:])
-}
-
-func (sid *SessionID) FromString(s string) error {
-	b, err := base64.RawStdEncoding.DecodeString(s)
-	if err != nil {
-		return err
-	}
-
-	copy(sid[:], b)
-
-	return nil
-}
-
-type Session struct {
-	ID     SessionID
-	GameID string
-}
-
-type SessionClaims struct {
-	jwt.RegisteredClaims
-
-	GameID string `json:"game"`
-
-	Difficulty int                `json:"difficulty"`
-	Salt       [ProofSaltLen]byte `json:"salt"`
-}
-
-var (
-	ErrSessionExists = errors.New("session exists")
-)
-
-type SessionNewRequest struct {
-	GameID string `json:"game"`
-}
-type SessionNewResponse struct {
-	Token string `json:"token"`
-
-	Difficulty int                `json:"difficulty"`
-	Salt       [ProofSaltLen]byte `json:"salt"`
-}
 
 func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
 	var game Game
@@ -78,7 +26,7 @@ func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
 	rand.Read(salt[:])
 
 	// create jwt
-	token, err := jwt.NewWithClaims(jwtMethod, SessionClaims{
+	token, err := jwt.NewWithClaims(JwtMethod, SessionClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
 			Subject:   sessionID.String(),
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Minute)),
@@ -96,15 +44,6 @@ func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
 		Difficulty: ProofDifficulty,
 		Salt:       salt,
 	}, nil
-}
-
-type SessionVerifyRequest struct {
-	Token string `json:"token"` // proof token instead of session so it goes here instead
-	Proof []byte `json:"proof"`
-}
-type SessionVerifyResponse struct {
-	Token        string `json:"token"`
-	NatNegServer string `json:"natneg_server"`
 }
 
 func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, error) {
@@ -133,7 +72,7 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 
 	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(time.Hour * 24))
 
-	tokenStr, err := jwt.NewWithClaims(jwtMethod, claims).SignedString(MustGetJwtKey("session"))
+	tokenStr, err := jwt.NewWithClaims(JwtMethod, claims).SignedString(MustGetJwtKey("session"))
 	if err != nil {
 		return SessionVerifyResponse{}, err
 	}

@@ -5,10 +5,10 @@ import (
 	"encoding/json"
 	"net/netip"
 
+	. "github.com/kitsudotfun/kyuubi/api/defs"
+
 	_ "github.com/syumai/workers/cloudflare/d1"
 )
-
-const DatabaseName = "KITSU_DB"
 
 func MustGetDB() *sql.DB {
 	db, err := sql.Open("d1", DatabaseName)
@@ -19,35 +19,13 @@ func MustGetDB() *sql.DB {
 	return db
 }
 
-const (
-	putServer = `
-	INSERT OR REPLACE INTO servers 
-	(id, game, addr, name, hidden, password, players, max_players, data)
-	VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`
-
-	deleteServer = `
-	DELETE FROM servers 
-	WHERE game = ? 
-	AND id = ?`
-
-	getServers = `
-	SELECT id, game, addr, name, hidden, password, players, max_players, data 
-	FROM servers 
-	WHERE game = ? 
-	AND updated > DATETIME('now', '-5 minutes')`
-
-	cleanServers = `
-	DELETE FROM servers
-	WHERE updated < DATETIME('now', '-5 minutes')`
-)
-
 func PutServer(server Server) error {
 	data, err := json.Marshal(server.Data)
 	if err != nil {
 		return err
 	}
 
-	_, err = MustGetDB().Exec(putServer, server.ID, server.GameID, server.Addr, server.Name, server.Hidden, server.Password, server.Players, server.MaxPlayers, string(data))
+	_, err = MustGetDB().Exec(PutServerQuery, server.ID, server.GameID, server.Addr, server.Name, server.Hidden, server.Password, server.Players, server.MaxPlayers, string(data))
 	if err != nil {
 		return err
 	}
@@ -56,7 +34,7 @@ func PutServer(server Server) error {
 }
 
 func DeleteServer(id SessionID, game string) error {
-	_, err := MustGetDB().Exec(deleteServer, game, id)
+	_, err := MustGetDB().Exec(DeleteServerQuery, game, id)
 	if err != nil {
 		return err
 	}
@@ -67,7 +45,7 @@ func DeleteServer(id SessionID, game string) error {
 func GetServer(id SessionID, game string) (Server, error) {
 	var server Server
 	var addr, data string
-	err := MustGetDB().QueryRow(getServers+" AND id = ?", game, id).Scan(&server.ID, &server.GameID, &addr, &server.Name, &server.Hidden, &server.Password, &server.Players, &server.MaxPlayers, &data)
+	err := MustGetDB().QueryRow(GetServersQuery+" AND id = ?", game, id).Scan(&server.ID, &server.GameID, &addr, &server.Name, &server.Hidden, &server.Password, &server.Players, &server.MaxPlayers, &data)
 	if err != nil {
 		return Server{}, err
 	}
@@ -86,7 +64,7 @@ func GetServer(id SessionID, game string) (Server, error) {
 }
 
 func GetServers(game string) ([]Server, error) {
-	rows, err := MustGetDB().Query(getServers, game)
+	rows, err := MustGetDB().Query(GetServersQuery, game)
 	if err != nil {
 		return nil, err
 	}
@@ -127,7 +105,7 @@ func GetServers(game string) ([]Server, error) {
 }
 
 func CleanServers() error {
-	_, err := MustGetDB().Exec(cleanServers)
+	_, err := MustGetDB().Exec(CleanServersQuery)
 	if err != nil {
 		return err
 	}

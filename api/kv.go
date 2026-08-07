@@ -3,13 +3,10 @@ package api
 import (
 	"bytes"
 	"encoding/gob"
-	"errors"
+
+	. "github.com/kitsudotfun/kyuubi/api/defs"
 
 	"github.com/syumai/workers/cloudflare/kv"
-)
-
-var (
-	ErrKeyNotFound = errors.New("key not found")
 )
 
 func GetEncodedKV[dataT any](key string, namespace string, data *dataT) (err error) {

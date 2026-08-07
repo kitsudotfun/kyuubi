@@ -1,23 +1,11 @@
 package api
 
 import (
-	"errors"
 	"io"
 
-	"github.com/golang-jwt/jwt/v5"
+	. "github.com/kitsudotfun/kyuubi/api/defs"
+
 	"github.com/syumai/workers/cloudflare/kv"
-)
-
-const (
-	JwtKeyNamespace = "KITSU_JWT_KEYS"
-)
-
-var (
-	jwtMethod = jwt.SigningMethodHS256
-)
-
-var (
-	ErrInvalidToken = errors.New("invalid token")
 )
 
 func MustGetJwtKey(id string) []byte {

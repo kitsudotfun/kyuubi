@@ -1,4 +1,4 @@
-package api
+package defs
 
 import (
 	"net/netip"

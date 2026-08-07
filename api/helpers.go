@@ -5,6 +5,8 @@ import (
 	"net/http"
 	"strings"
 
+	. "github.com/kitsudotfun/kyuubi/api/defs"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
