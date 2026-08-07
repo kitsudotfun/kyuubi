@@ -16,8 +16,7 @@ type Server struct {
 	Name   string `json:"name"`
 	Hidden bool   `json:"hidden"`
 
-	HasPassword bool   `json:"has_password"`
-	Password    string `json:"password"`
+	Password string `json:"password"`
 
 	Players    int `json:"players"`
 	MaxPlayers int `json:"max_players"`
