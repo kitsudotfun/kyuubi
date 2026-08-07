@@ -2,8 +2,9 @@ package main
 
 import (
 	"context"
-	"kyuubi/api"
 	"net/http"
+
+	"github.com/kitsudotfun/kyuubi/api"
 
 	"github.com/syumai/workers"
 	"github.com/syumai/workers/cloudflare/cron"

@@ -1,4 +1,4 @@
-module kyuubi
+module github.com/kitsudotfun/kyuubi
 
 go 1.26.5
 
