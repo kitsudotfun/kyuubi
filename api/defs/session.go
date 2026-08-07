@@ -2,6 +2,7 @@ package defs
 
 import (
 	"encoding/base64"
+	"encoding/json"
 	"errors"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -37,6 +38,21 @@ func (sid SessionID) Bytes() []byte {
 
 func (sid *SessionID) FromBytes(b []byte) {
 	copy(sid[:], b)
+}
+
+func (sid SessionID) MarshalJSON() ([]byte, error) {
+	return json.Marshal(sid[:])
+}
+
+func (sid *SessionID) UnmarshalJSON(data []byte) error {
+	var b []byte
+	err := json.Unmarshal(data, &b)
+	if err != nil {
+		return err
+	}
+
+	copy(sid[:], b)
+	return nil
 }
 
 type Session struct {
