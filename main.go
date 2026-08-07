@@ -1,15 +1,20 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 	"strings"
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/syumai/workers"
+	"github.com/syumai/workers/cloudflare/cron"
 )
 
 func main() {
+	// clean up database nightly
+	cron.ScheduleTaskNonBlock(func(ctx context.Context) error { return CleanServers() })
+
 	// session
 	http.HandleFunc("POST /dev/session/new", handJson(SessionNew, Session{}))
 	http.HandleFunc("POST /dev/session/verify", handJson(SessionVerify, Session{}))

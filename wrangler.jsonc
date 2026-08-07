@@ -8,6 +8,9 @@
 	"main": "./build/worker.mjs",
 	"compatibility_date": "2026-08-04",
 	"workers_dev": false,
+	"triggers": {
+		"crons": ["0 0 * * *"]
+	},
 	"build": {
 		"command": "npm run build"
 	},

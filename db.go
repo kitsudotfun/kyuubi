@@ -35,6 +35,10 @@ const (
 	FROM servers 
 	WHERE game = ? 
 	AND updated > DATETIME('now', '-5 minutes')`
+
+	cleanServers = `
+	DELETE FROM servers
+	WHERE updated < DATETIME('now', '-5 minutes')`
 )
 
 func PutServer(server Server) error {
@@ -120,4 +124,13 @@ func GetServers(game string) ([]Server, error) {
 	}
 
 	return servers, nil
+}
+
+func CleanServers() error {
+	_, err := MustGetDB().Exec(cleanServers)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
