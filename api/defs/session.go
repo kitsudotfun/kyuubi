@@ -26,9 +26,17 @@ func (sid *SessionID) FromString(s string) error {
 		return err
 	}
 
-	copy(sid[:], b)
+	sid.FromBytes(b)
 
 	return nil
+}
+
+func (sid SessionID) Bytes() []byte {
+	return sid[:]
+}
+
+func (sid *SessionID) FromBytes(b []byte) {
+	copy(sid[:], b)
 }
 
 type Session struct {

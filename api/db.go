@@ -25,7 +25,7 @@ func PutServer(server Server) error {
 		return err
 	}
 
-	_, err = MustGetDB().Exec(PutServerQuery, server.ID, server.GameID, server.Addr, server.Name, server.Hidden, server.Password, server.Players, server.MaxPlayers, string(data))
+	_, err = MustGetDB().Exec(PutServerQuery, server.ID.Bytes(), server.GameID, server.Addr.String(), server.Name, server.Hidden, server.Password, server.Players, server.MaxPlayers, string(data))
 	if err != nil {
 		return err
 	}
@@ -44,11 +44,14 @@ func DeleteServer(id SessionID, game string) error {
 
 func GetServer(id SessionID, game string) (Server, error) {
 	var server Server
+	var serverID []byte
 	var addr, data string
-	err := MustGetDB().QueryRow(GetServersQuery+" AND id = ?", game, id).Scan(&server.ID, &server.GameID, &addr, &server.Name, &server.Hidden, &server.Password, &server.Players, &server.MaxPlayers, &data)
+	err := MustGetDB().QueryRow(GetServersQuery+" AND id = ?", game, id.Bytes()).Scan(&serverID, &server.GameID, &addr, &server.Name, &server.Hidden, &server.Password, &server.Players, &server.MaxPlayers, &data)
 	if err != nil {
 		return Server{}, err
 	}
+
+	server.ID.FromBytes(serverID)
 
 	server.Addr, err = netip.ParseAddrPort(addr)
 	if err != nil {
@@ -74,11 +77,14 @@ func GetServers(game string) ([]Server, error) {
 	var servers []Server
 	for rows.Next() {
 		var server Server
+		var serverID []byte
 		var addr, data string
-		err = rows.Scan(&server.ID, &server.GameID, &addr, &server.Name, &server.Hidden, &server.Password, &server.Players, &server.MaxPlayers, &data)
+		err = rows.Scan(&serverID, &server.GameID, &addr, &server.Name, &server.Hidden, &server.Password, &server.Players, &server.MaxPlayers, &data)
 		if err != nil {
 			return nil, err
 		}
+
+		server.ID.FromBytes(serverID)
 
 		server.Addr, err = netip.ParseAddrPort(addr)
 		if err != nil {
