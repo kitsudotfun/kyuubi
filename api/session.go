@@ -70,15 +70,19 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 		return SessionVerifyResponse{}, ErrInvalidProof
 	}
 
-	claims.RegisteredClaims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(time.Hour * 24))
+	claims.ExpiresAt = jwt.NewNumericDate(time.Now().UTC().Add(time.Hour * 24))
 
 	tokenStr, err := jwt.NewWithClaims(JwtMethod, claims).SignedString(MustGetJwtKey("session"))
 	if err != nil {
 		return SessionVerifyResponse{}, err
 	}
 
+	var sid SessionID
+	sid.FromString(claims.Subject)
+
 	return SessionVerifyResponse{
 		Token:        tokenStr,
+		ID:           sid,
 		NatNegServer: NatNegServer,
 	}, nil
 }

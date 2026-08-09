@@ -90,6 +90,7 @@ type SessionVerifyRequest struct {
 	Proof []byte `json:"proof"`
 }
 type SessionVerifyResponse struct {
-	Token        string `json:"token"`
-	NatNegServer string `json:"natneg_server"`
+	Token        string    `json:"token"`
+	ID           SessionID `json:"id"`
+	NatNegServer string    `json:"natneg_server"`
 }
