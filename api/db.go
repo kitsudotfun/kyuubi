@@ -46,7 +46,7 @@ func GetServer(id SessionID, game string) (Server, error) {
 	var server Server
 	var serverID []byte
 	var addr, data string
-	err := MustGetDB().QueryRow(GetServersQuery+" AND id = ?", game, id.Bytes()).Scan(&serverID, &server.GameID, &addr, &server.Name, &server.Hidden, &server.Password, &server.Players, &server.MaxPlayers, &data)
+	err := MustGetDB().QueryRow(GetServerQuery, game, id.Bytes()).Scan(&serverID, &server.GameID, &addr, &server.Name, &server.Hidden, &server.Password, &server.Players, &server.MaxPlayers, &data)
 	if err != nil {
 		return Server{}, err
 	}
@@ -79,7 +79,7 @@ func GetServers(game string) ([]Server, error) {
 		var server Server
 		var serverID []byte
 		var addr, data string
-		err = rows.Scan(&serverID, &server.GameID, &addr, &server.Name, &server.Hidden, &server.Password, &server.Players, &server.MaxPlayers, &data)
+		err = rows.Scan(&serverID, &server.GameID, &addr, &server.Name, &server.Password, &server.Players, &server.MaxPlayers, &data)
 		if err != nil {
 			return nil, err
 		}

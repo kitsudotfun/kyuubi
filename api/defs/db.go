@@ -13,10 +13,18 @@ const (
 	WHERE game = ? 
 	AND id = ?`
 
-	GetServersQuery = `
+	GetServerQuery = `
 	SELECT id, game, addr, name, hidden, password, players, max_players, data 
 	FROM servers 
 	WHERE game = ? 
+	AND id = ?
+	AND updated > DATETIME('now', '-5 minutes')`
+
+	GetServersQuery = `
+	SELECT id, game, addr, name, password, players, max_players, data 
+	FROM servers 
+	WHERE game = ? 
+	AND hidden = 0
 	AND updated > DATETIME('now', '-5 minutes')`
 
 	CleanServersQuery = `
