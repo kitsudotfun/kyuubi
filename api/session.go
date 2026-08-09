@@ -78,7 +78,10 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 	}
 
 	var sid SessionID
-	sid.FromString(claims.Subject)
+	err = sid.FromString(claims.Subject)
+	if err != nil {
+		return SessionVerifyResponse{}, err
+	}
 
 	return SessionVerifyResponse{
 		Token:        tokenStr,
