@@ -4,6 +4,7 @@ import (
 	"encoding/base64"
 	"encoding/json"
 	"errors"
+	"net/netip"
 
 	"github.com/golang-jwt/jwt/v5"
 )
@@ -90,7 +91,7 @@ type SessionVerifyRequest struct {
 	Proof []byte `json:"proof"`
 }
 type SessionVerifyResponse struct {
-	Token        string    `json:"token"`
-	ID           SessionID `json:"id"`
-	NatNegServer string    `json:"natneg_server"`
+	Token      string         `json:"token"`
+	ID         SessionID      `json:"id"`
+	NatNegAddr netip.AddrPort `json:"natneg_addr"`
 }

@@ -1,10 +1,14 @@
 package api
 
 import (
+	"context"
 	"crypto/rand"
 	"crypto/sha256"
 	"encoding/binary"
 	"math/bits"
+	"net"
+	"net/netip"
+	"strconv"
 	"time"
 
 	. "github.com/kitsudotfun/kyuubi/api/defs"
@@ -83,9 +87,22 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 		return SessionVerifyResponse{}, err
 	}
 
+	host, port, err := net.SplitHostPort(NatNegServer)
+	if err != nil {
+		return SessionVerifyResponse{}, err
+	}
+	addrs, err := net.DefaultResolver.LookupNetIP(context.Background(), "ip4", host)
+	if err != nil {
+		return SessionVerifyResponse{}, err
+	}
+	portInt, err := strconv.Atoi(port)
+	if err != nil {
+		return SessionVerifyResponse{}, err
+	}
+
 	return SessionVerifyResponse{
-		Token:        tokenStr,
-		ID:           sid,
-		NatNegServer: NatNegServer,
+		Token:      tokenStr,
+		ID:         sid,
+		NatNegAddr: netip.AddrPortFrom(addrs[0], uint16(portInt)),
 	}, nil
 }
