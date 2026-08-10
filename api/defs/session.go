@@ -9,7 +9,7 @@ import (
 )
 
 const (
-	SessionIdLen = 8
+	SessionIdLen = 4
 
 	ProofDifficulty = 24 // bits
 	ProofSaltLen    = 16
