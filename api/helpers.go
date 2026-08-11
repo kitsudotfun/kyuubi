@@ -65,10 +65,6 @@ func handAuth[reqT any, resT any](handler func(reqT, Session) (resT, error)) htt
 			return
 		}
 
-		var session Session
-		session.ID.FromString(claims.Subject)
-		session.GameID = claims.GameID
-
-		handJson(handler, session).ServeHTTP(w, r)
+		handJson(handler, claims.Session).ServeHTTP(w, r)
 	}
 }

@@ -23,8 +23,8 @@ func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
 		return SessionNewResponse{}, ErrUnknownGame
 	}
 
-	var sessionID SessionID
-	rand.Read(sessionID[:])
+	b := make([]byte, 4)
+	rand.Read(b)
 
 	var salt [ProofSaltLen]byte
 	rand.Read(salt[:])
@@ -32,10 +32,12 @@ func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
 	// create jwt
 	token, err := jwt.NewWithClaims(JwtMethod, SessionClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   sessionID.String(),
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Minute)),
 		},
-		GameID:     game.ID,
+		Session: Session{
+			ID:     SessionID(binary.BigEndian.Uint32(b)),
+			GameID: game.ID,
+		},
 		Difficulty: ProofDifficulty,
 		Salt:       salt,
 	}).SignedString(MustGetJwtKey("proof"))
@@ -81,12 +83,6 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 		return SessionVerifyResponse{}, err
 	}
 
-	var sid SessionID
-	err = sid.FromString(claims.Subject)
-	if err != nil {
-		return SessionVerifyResponse{}, err
-	}
-
 	host, port, err := net.SplitHostPort(NatNegServer)
 	if err != nil {
 		return SessionVerifyResponse{}, err
@@ -102,7 +98,7 @@ func SessionVerify(req SessionVerifyRequest, _ Session) (SessionVerifyResponse, 
 
 	return SessionVerifyResponse{
 		Token:      tokenStr,
-		ID:         sid,
+		ID:         claims.Session.ID,
 		NatNegAddr: netip.AddrPortFrom(addrs[0], uint16(portInt)),
 	}, nil
 }

@@ -15,7 +15,7 @@ func ServerHeartbeat(req ServerHeartbeatRequest, s Session) (ServerHeartbeatResp
 	if err != nil {
 		return ServerHeartbeatResponse{}, err
 	}
-	if !token.Valid || !slices.Contains(claims.Audience, "natneg_attest") || claims.Subject != s.ID.String() {
+	if !token.Valid || !slices.Contains(claims.Audience, "natneg_attest") || claims.Session != s {
 		return ServerHeartbeatResponse{}, ErrInvalidToken
 	}
 
@@ -63,10 +63,10 @@ func ServerJoin(req ServerJoinRequest, s Session) (ServerJoinResponse, error) {
 
 	token, err := jwt.NewWithClaims(JwtMethod, ServerJoinClaims{
 		RegisteredClaims: jwt.RegisteredClaims{
-			Subject:   s.ID.String(),
 			Audience:  jwt.ClaimStrings{"natneg_join"},
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Minute)),
 		},
+		Session:    s,
 		ServerID:   server.ID,
 		ServerAddr: server.Addr,
 	}).SignedString(MustGetJwtKey("natneg"))

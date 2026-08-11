@@ -2,6 +2,7 @@ package defs
 
 import (
 	"errors"
+	"fmt"
 	"net/netip"
 
 	"github.com/golang-jwt/jwt/v5"
@@ -25,7 +26,7 @@ type Server struct {
 }
 
 func (s Server) Key() string {
-	return s.GameID + "|" + s.ID.String()
+	return fmt.Sprintf("%s|%d", s.GameID, s.ID)
 }
 
 var (
@@ -62,6 +63,7 @@ type ServerJoinResponse struct {
 
 type ServerJoinClaims struct {
 	jwt.RegisteredClaims
+	Session `json:"session"`
 
 	ServerID   SessionID      `json:"server_id"`
 	ServerAddr netip.AddrPort `json:"server_addr"`

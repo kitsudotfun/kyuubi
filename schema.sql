@@ -1,5 +1,5 @@
 CREATE TABLE IF NOT EXISTS "servers" (
-	"id" BLOB NOT NULL,
+	"id" INTEGER NOT NULL,
 	"game" TEXT NOT NULL,
 
 	"addr" TEXT NOT NULL,

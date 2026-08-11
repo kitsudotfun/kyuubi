@@ -12,6 +12,7 @@ const (
 
 type NatNegClaims struct {
 	jwt.RegisteredClaims
+	Session `json:"session"`
 
 	Addr netip.AddrPort `json:"addr"`
 }

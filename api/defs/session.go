@@ -1,8 +1,6 @@
 package defs
 
 import (
-	"encoding/base64"
-	"encoding/json"
 	"errors"
 	"net/netip"
 
@@ -10,51 +8,11 @@ import (
 )
 
 const (
-	SessionIdLen = 4
-
 	ProofDifficulty = 24 // bits
 	ProofSaltLen    = 16
 )
 
-type SessionID [SessionIdLen]byte
-
-func (sid SessionID) String() string {
-	return base64.RawStdEncoding.EncodeToString(sid[:])
-}
-
-func (sid *SessionID) FromString(s string) error {
-	b, err := base64.RawStdEncoding.DecodeString(s)
-	if err != nil {
-		return err
-	}
-
-	sid.FromBytes(b)
-
-	return nil
-}
-
-func (sid SessionID) Bytes() []byte {
-	return sid[:]
-}
-
-func (sid *SessionID) FromBytes(b []byte) {
-	copy(sid[:], b)
-}
-
-func (sid SessionID) MarshalJSON() ([]byte, error) {
-	return json.Marshal(sid[:])
-}
-
-func (sid *SessionID) UnmarshalJSON(data []byte) error {
-	var b []byte
-	err := json.Unmarshal(data, &b)
-	if err != nil {
-		return err
-	}
-
-	copy(sid[:], b)
-	return nil
-}
+type SessionID uint32
 
 type Session struct {
 	ID     SessionID
@@ -63,11 +21,10 @@ type Session struct {
 
 type SessionClaims struct {
 	jwt.RegisteredClaims
+	Session `json:"session"`
 
-	GameID string `json:"game"`
-
-	Difficulty int                `json:"difficulty"`
-	Salt       [ProofSaltLen]byte `json:"salt"`
+	Difficulty int                `json:"difficulty,omitzero"`
+	Salt       [ProofSaltLen]byte `json:"salt,omitzero"`
 }
 
 var (
