@@ -32,7 +32,7 @@ func SessionNew(req SessionNewRequest, _ Session) (SessionNewResponse, error) {
 			ExpiresAt: jwt.NewNumericDate(time.Now().UTC().Add(time.Minute)),
 		},
 		Session: Session{
-			ID:     SessionID(binary.BigEndian.Uint32(b)),
+			ID:     PeerID(binary.BigEndian.Uint32(b)),
 			GameID: game.ID,
 		},
 		Difficulty: ProofDifficulty,

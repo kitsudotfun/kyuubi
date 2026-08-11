@@ -9,7 +9,7 @@ import (
 )
 
 type Server struct {
-	ID SessionID `json:"id"`
+	ID PeerID `json:"id"`
 
 	GameID string         `json:"-"`
 	Addr   netip.AddrPort `json:"-"`
@@ -54,8 +54,8 @@ type ServerListResponse struct {
 
 // /server/join
 type ServerJoinRequest struct {
-	ServerID SessionID `json:"server_id"`
-	Password string    `json:"password"`
+	ServerID PeerID `json:"server_id"`
+	Password string `json:"password"`
 }
 type ServerJoinResponse struct {
 	Token string `json:"token"`
@@ -65,6 +65,6 @@ type ServerJoinClaims struct {
 	jwt.RegisteredClaims
 	Session `json:"session"`
 
-	ServerID   SessionID      `json:"server_id"`
+	ServerID   PeerID         `json:"server_id"`
 	ServerAddr netip.AddrPort `json:"server_addr"`
 }

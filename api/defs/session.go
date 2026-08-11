@@ -12,10 +12,10 @@ const (
 	ProofSaltLen    = 16
 )
 
-type SessionID uint32
+type PeerID uint32
 
 type Session struct {
-	ID     SessionID
+	ID     PeerID
 	GameID string
 }
 
@@ -49,6 +49,6 @@ type SessionVerifyRequest struct {
 }
 type SessionVerifyResponse struct {
 	Token      string         `json:"token"`
-	ID         SessionID      `json:"id"`
+	ID         PeerID         `json:"id"`
 	NatNegAddr netip.AddrPort `json:"natneg_addr"`
 }

@@ -33,7 +33,7 @@ func PutServer(server Server) error {
 	return nil
 }
 
-func DeleteServer(id SessionID, game string) error {
+func DeleteServer(id PeerID, game string) error {
 	_, err := MustGetDB().Exec(DeleteServerQuery, game, id)
 	if err != nil {
 		return err
@@ -42,7 +42,7 @@ func DeleteServer(id SessionID, game string) error {
 	return nil
 }
 
-func GetServer(id SessionID, game string) (Server, error) {
+func GetServer(id PeerID, game string) (Server, error) {
 	var server Server
 	var addr, data string
 	err := MustGetDB().QueryRow(GetServerQuery, game, id).Scan(&server.ID, &server.GameID, &addr, &server.Name, &server.Hidden, &server.Password, &server.Players, &server.MaxPlayers, &data)
