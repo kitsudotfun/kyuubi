@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	NatNegServer = "natneg.kitsu.fun:62426"
+	NatNegServer = "51.81.22.70:62426"
 )
 
 type NatNegClaims struct {
