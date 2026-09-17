@@ -6,7 +6,7 @@ import (
 
 	. "github.com/kitsudotfun/kyuubi/api/defs"
 
-	"github.com/syumai/workers/cloudflare/kv"
+	"github.com/syumai/workers-go/cloudflare/kv"
 )
 
 func GetEncodedKV[dataT any](key string, namespace string, data *dataT) (err error) {
