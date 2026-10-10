@@ -6,8 +6,8 @@ import (
 
 	"github.com/kitsudotfun/kyuubi/api"
 
-	"github.com/syumai/workers"
-	"github.com/syumai/workers/cloudflare/cron"
+	"github.com/syumai/workers-go"
+	"github.com/syumai/workers-go/cloudflare/cron"
 )
 
 func main() {
