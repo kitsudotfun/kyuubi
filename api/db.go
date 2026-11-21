@@ -7,7 +7,7 @@ import (
 
 	. "github.com/kitsudotfun/kyuubi/api/defs"
 
-	_ "github.com/syumai/workers/cloudflare/d1"
+	_ "github.com/syumai/workers-go/cloudflare/d1"
 )
 
 func MustGetDB() *sql.DB {
